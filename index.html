@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Android Contacts & Dialer</title>
+    
+    <!-- Tailwind CSS for rapid styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts for Android Material look (Roboto & Material Icons) -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <style>
+        /* Custom Styles to mimic native Android feel */
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #e5e7eb; /* Outer gray background to simulate phone screen bounds on desktop */
+            -webkit-tap-highlight-color: transparent; /* Remove web tap highlight */
+        }
+
+        /* Container simulating the phone screen */
+        .phone-container {
+            width: 100%;
+            max-width: 400px;
+            height: 100vh;
+            max-height: 850px;
+            margin: 0 auto;
+            background-color: #fff;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            border: 1px solid #d1d5db;
+        }
+
+        /* Smooth view transitions */
+        .view {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1), opacity 0.3s ease;
+            background: #fff;
+            z-index: 10;
+        }
+
+        .view.hidden-view {
+            transform: translateY(100%);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* Call screen specific styles */
+        #call-view {
+            background-color: #1c1c1e;
+            background-size: cover;
+            background-position: center;
+            color: white;
+            z-index: 20;
+        }
+
+        .call-overlay {
+            background: linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.2) 30%, rgba(0,0,0,0.8) 100%);
+        }
+
+        .ripple-effect:active {
+            background-color: rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center m-0 min-h-screen text-gray-800">
+
+    <div class="phone-container">
+        
+        <!-- ============================================== -->
+        <!-- VIEW 1: CONTACT LIST                           -->
+        <!-- ============================================== -->
+        <div id="contacts-view" class="view flex flex-col h-full">
+            
+            <!-- Android Style App Bar -->
+            <header class="bg-white shadow-sm px-4 py-4 flex items-center justify-between sticky top-0 z-10 border-b border-gray-200">
+                <div class="text-xl font-medium text-gray-800 tracking-wide">Contacts</div>
+                <div class="flex space-x-4 text-gray-600">
+                    <span class="material-icons">search</span>
+                    <span class="material-icons">more_vert</span>
+                </div>
+            </header>
+
+            <!-- Scrollable Contacts List -->
+            <ul id="contact-list" class="flex-1 overflow-y-auto pb-6">
+                <!-- Contacts injected here by JavaScript -->
+            </ul>
+
+        </div>
+
+        <!-- ============================================== -->
+        <!-- VIEW 2: ACTIVE CALL SCREEN                     -->
+        <!-- ============================================== -->
+        <div id="call-view" class="view hidden-view flex flex-col justify-between relative">
+            
+            <!-- Dark gradient overlay for readability -->
+            <div class="call-overlay absolute inset-0 z-0 pointer-events-none"></div>
+
+            <!-- Top Section: Contact Info -->
+            <div class="z-10 flex flex-col items-center mt-16 space-y-2">
+                <h2 id="call-name" class="text-4xl font-normal tracking-wide text-white drop-shadow-lg">Contact Name</h2>
+                <p id="call-status" class="text-gray-200 text-sm tracking-widest font-light drop-shadow-md uppercase">Calling...</p>
+            </div>
+
+            <!-- Middle Section: Call Actions -->
+            <div class="z-10 grid grid-cols-3 gap-8 text-center text-white mb-8 mx-8 drop-shadow-md">
+                <div class="flex flex-col items-center space-y-2">
+                    <span class="material-icons text-3xl">mic_off</span>
+                    <span class="text-xs font-medium">Mute</span>
+                </div>
+                <div class="flex flex-col items-center space-y-2">
+                    <span class="material-icons text-3xl">dialpad</span>
+                    <span class="text-xs font-medium">Keypad</span>
+                </div>
+                <div class="flex flex-col items-center space-y-2">
+                    <span class="material-icons text-3xl">volume_up</span>
+                    <span class="text-xs font-medium">Speaker</span>
+                </div>
+            </div>
+
+            <!-- Bottom Section: End Call Button -->
+            <div class="z-10 mb-12 flex justify-center w-full">
+                <!-- Red End Call Button -->
+                <button id="end-call-btn" class="bg-red-600 hover:bg-red-700 transition-transform active:scale-90 w-16 h-16 rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(220,38,38,0.5)]">
+                    <span class="material-icons text-white text-3xl">call_end</span>
+                </button>
+            </div>
+            
+        </div>
+    </div>
+
+    <!-- Application Logic -->
+    <script>
+        /** 
+         * ==============================================
+         * CONFIGURATION ARRAY
+         * ==============================================
+         */
+        const contacts = [
+            {
+                id: 1,
+                name: "Mickey Mouse",
+                smallPhoto: "https://github.com/xStix99x/Call-Friends/blob/main/Mickey%20Mouse_Small.jpg?raw=true",
+                bigPhoto: "https://github.com/xStix99x/Call-Friends/blob/main/Mickey%20Mouse_Big.jpg?raw=true",
+                audioUrl: "https://github.com/xStix99x/Call-Friends/raw/refs/heads/main/Mickey_Audio.mp3" 
+            },
+            {
+                id: 2,
+                name: "Minnie Mouse",
+                smallPhoto: "https://github.com/xStix99x/Call-Friends/blob/main/Minnie%20Mouse_Small.jpg?raw=true",
+                bigPhoto: "https://github.com/xStix99x/Call-Friends/blob/main/Minnie%20Mouse_Big.jpg?raw=true",
+                audioUrl: "https://github.com/xStix99x/Call-Friends/raw/refs/heads/main/Minnie_Audio.mp3"
+            },
+            {
+                id: 3,
+                name: "Donald Duck",
+                smallPhoto: "https://github.com/xStix99x/Call-Friends/blob/main/Donald_Small.jpg?raw=true",
+                bigPhoto: "https://github.com/xStix99x/Call-Friends/blob/main/Donald_Big.jpg?raw=true",
+                audioUrl: "https://github.com/xStix99x/Call-Friends/raw/refs/heads/main/Donald_Audio.mp3"
+            },
+            {
+                id: 4,
+                name: "Daisy Duck",
+                smallPhoto: "https://github.com/xStix99x/Call-Friends/blob/main/Daisy_Small.jpg?raw=true",
+                bigPhoto: "https://github.com/xStix99x/Call-Friends/blob/main/Daisy_Big.jpg?raw=true",
+                audioUrl: "https://github.com/xStix99x/Call-Friends/raw/refs/heads/main/Daisy_Audio.mp3"
+            },
+            {
+                id: 5,
+                name: "Goofy",
+                smallPhoto: "https://github.com/xStix99x/Call-Friends/blob/main/Goofy_Small.jpg?raw=true",
+                bigPhoto: "https://github.com/xStix99x/Call-Friends/blob/main/Goofy_Big.jpg?raw=true",
+                audioUrl: "https://github.com/xStix99x/Call-Friends/raw/refs/heads/main/Goofy_Audio.mp3"
+            },
+            {
+                id: 6,
+                name: "Clarabelle",
+                smallPhoto: "https://github.com/xStix99x/Call-Friends/blob/main/Clarabelle_Small.jpg?raw=true",
+                bigPhoto: "https://github.com/xStix99x/Call-Friends/blob/main/Clarabelle_Big.jpg?raw=true",
+                audioUrl: "https://github.com/xStix99x/Call-Friends/raw/refs/heads/main/Clarabelle_Audio.mp3"
+            },
+            {
+                id: 7,
+                name: "Winnie the Pooh",
+                smallPhoto: "https://github.com/xStix99x/Call-Friends/blob/main/Winnie%20the%20Pooh_Small.jpg?raw=true",
+                bigPhoto: "https://github.com/xStix99x/Call-Friends/blob/main/Winnie%20the%20Pooh_Big.jpg?raw=true",
+                audioUrl: "https://github.com/xStix99x/Call-Friends/raw/refs/heads/main/Pooh_Audio.mp3"
+            },
+            {
+                id: 8,
+                name: "Tigger",
+                smallPhoto: "https://github.com/xStix99x/Call-Friends/blob/main/Tigger_Small.jpg?raw=true",
+                bigPhoto: "https://github.com/xStix99x/Call-Friends/blob/main/Tigger_Big.jpg?raw=true",
+                audioUrl: "https://github.com/xStix99x/Call-Friends/raw/refs/heads/main/Tigger_Audio.mp3"
+            },
+            {
+                id: 9,
+                name: "Stitch",
+                smallPhoto: "https://github.com/xStix99x/Call-Friends/blob/main/Stitch_Small.jpg?raw=true",
+                bigPhoto: "https://github.com/xStix99x/Call-Friends/blob/main/Stitch_Big.jpg?raw=true",
+                audioUrl: "https://github.com/xStix99x/Call-Friends/raw/refs/heads/main/Stitch_Audio.mp3"
+            },
+            {
+                id: 10,
+                name: "Peppa Pig",
+                smallPhoto: "https://github.com/xStix99x/Call-Friends/blob/main/Peppa%20Pig_Small.jpg?raw=true",
+                bigPhoto: "https://github.com/xStix99x/Call-Friends/blob/main/Peppa%20Pig_Big.jpg?raw=true",
+                audioUrl: "https://github.com/xStix99x/Call-Friends/raw/refs/heads/main/Peppa_Audio.mp3"
+            }
+        ];
+
+        // Global Variables
+        let currentCharacterAudio = null;
+        const ringAudio = new Audio("https://github.com/xStix99x/Call-Friends/raw/refs/heads/main/Phone%20Ring.mp3");
+        const endAudio = new Audio("https://github.com/xStix99x/Call-Friends/raw/refs/heads/main/End%20Call.mp3");
+        let isCalling = false; // Tracks if a call sequence is currently active
+        
+        // DOM Elements
+        const contactListEl = document.getElementById('contact-list');
+        const contactsView = document.getElementById('contacts-view');
+        const callView = document.getElementById('call-view');
+        const callNameEl = document.getElementById('call-name');
+        const callStatusEl = document.getElementById('call-status');
+        const endCallBtn = document.getElementById('end-call-btn');
+
+        /**
+         * Initialize the App
+         */
+        function initApp() {
+            renderContactList();
+            
+            // Attach event listener to End Call button
+            endCallBtn.addEventListener('click', terminateCall);
+        }
+
+        /**
+         * Render the contacts array into the HTML list
+         */
+        function renderContactList() {
+            contactListEl.innerHTML = ''; 
+            
+            contacts.forEach(contact => {
+                const li = document.createElement('li');
+                li.className = "flex items-center px-4 py-3 ripple-effect cursor-pointer border-b border-gray-100 transition-colors";
+                
+                // Add click listener to initiate the call
+                li.addEventListener('click', () => initiateCall(contact));
+                
+                li.innerHTML = `
+                    <div class="relative">
+                        <img src="${contact.smallPhoto}" alt="${contact.name}" class="w-12 h-12 rounded-full object-cover shadow-sm bg-gray-200">
+                    </div>
+                    <div class="ml-4 flex-1">
+                        <h3 class="text-base font-medium text-gray-800">${contact.name}</h3>
+                        <p class="text-sm text-gray-500">Mobile</p>
+                    </div>
+                    <div class="text-gray-300">
+                        <span class="material-icons">call</span>
+                    </div>
+                `;
+                
+                contactListEl.appendChild(li);
+            });
+        }
+
+        /**
+         * Start the call: Switch UI and handle audio sequence
+         */
+        function initiateCall(contact) {
+            if (isCalling) return; // Prevent double-tapping
+            isCalling = true;
+
+            // 1. Update UI Elements on Call Screen
+            callNameEl.textContent = contact.name;
+            callStatusEl.textContent = "Calling...";
+            
+            // Set the full screen background image
+            callView.style.backgroundImage = `url('${contact.bigPhoto}')`;
+            
+            // 2. Switch Views (Hide contacts, show call)
+            contactsView.classList.add('hidden-view');
+            callView.classList.remove('hidden-view');
+
+            // 3. Handle Audio Sequences
+            // Clean up any old character audio reference
+            if (currentCharacterAudio) {
+                currentCharacterAudio.pause();
+                currentCharacterAudio.currentTime = 0;
+            }
+            
+            // Reset core system audios
+            ringAudio.currentTime = 0;
+            endAudio.currentTime = 0;
+            
+            // Initialize new character audio
+            currentCharacterAudio = new Audio(contact.audioUrl);
+
+            // Sequence Step A: Ringing ends -> Play Character
+            ringAudio.onended = () => {
+                if (isCalling) {
+                    callStatusEl.textContent = "00:01"; // Simulate call connected
+                    currentCharacterAudio.play().catch(e => console.warn("Character audio blocked:", e));
+                }
+            };
+
+            // Sequence Step B: Character audio ends -> End Call automatically
+            currentCharacterAudio.onended = () => {
+                if (isCalling) {
+                    terminateCall();
+                }
+            };
+
+            // Start Sequence
+            ringAudio.play().catch(e => console.warn("Ring audio blocked by browser:", e));
+        }
+
+        /**
+         * End the call (Triggered manually or automatically)
+         */
+        function terminateCall() {
+            if (!isCalling) return;
+            isCalling = false;
+
+            callStatusEl.textContent = "Call Ended";
+
+            // 1. Stop all actively playing call audio
+            ringAudio.pause();
+            if (currentCharacterAudio) {
+                currentCharacterAudio.pause();
+            }
+            
+            // 2. Play End Call Sound
+            endAudio.currentTime = 0;
+            endAudio.play().catch(e => console.warn("End audio blocked:", e));
+
+            // 3. Switch Views back after a tiny delay for visual effect
+            setTimeout(() => {
+                callView.classList.add('hidden-view');
+                contactsView.classList.remove('hidden-view');
+            }, 600); // Wait just over half a second before snapping back
+        }
+
+        // Run the app!
+        initApp();
+    </script>
+</body>
+</html>
