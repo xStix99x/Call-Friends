@@ -1,6 +1,6 @@
 {
   "name": "Call Friends",
-  "short_name": "CF",
+  "short_name": "Call Friends",
   "start_url": "/Call-Friends/",
   "scope": "/Call-Friends/",
   "display": "standalone",
