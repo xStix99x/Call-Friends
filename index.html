@@ -1,3 +1,5 @@
+<!DOCTYPE html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -18,4 +20,382 @@
   <!-- Tailwind CSS & Fonts -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  
+  <style>
+    body {
+      font-family: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+    }
+    
+    .screen {
+      transition: opacity 0.25s ease-in-out, transform 0.25s ease-in-out;
+    }
+
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
 </head>
+<body class="bg-black flex justify-center items-center min-h-screen sm:p-4">
+
+  <!-- Mobile Frame Container -->
+  <div class="relative w-full max-w-[420px] h-[100dvh] sm:h-[840px] bg-[#111318] text-white overflow-hidden sm:rounded-[36px] shadow-2xl flex flex-col border border-gray-800">
+
+    <!-- ==================== SCREEN 1: CONTACTS LIST ==================== -->
+    <div id="contactListScreen" class="screen absolute inset-0 flex flex-col z-10 bg-[#111318] opacity-100 pointer-events-auto">
+      
+      <!-- Top Status Bar Simulation -->
+      <div class="flex justify-between items-center px-6 pt-3 pb-1 text-xs text-gray-400 font-medium select-none">
+        <span id="currentTime">12:00</span>
+        <div class="flex items-center space-x-2">
+          <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 3c-4.97 0-9 4.03-9 9 0 2.12.74 4.07 1.97 5.61L4.35 18.2A9.98 9.98 0 0 1 2 12c0-5.52 4.48-10 10-10s10 4.48 10 10c0 2.25-.74 4.32-2 6l-1.63-1.62A7.94 7.94 0 0 0 20 12c0-4.97-4.03-9-9-9z"/></svg>
+          <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
+          <span class="text-[10px]">100%</span>
+        </div>
+      </div>
+
+      <!-- Search Bar -->
+      <div class="px-4 py-2">
+        <div class="bg-[#282a2f] hover:bg-[#32353b] transition-colors rounded-full px-4 py-2.5 flex items-center shadow-sm">
+          <svg class="w-5 h-5 text-gray-400 mr-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+          </svg>
+          <input type="text" id="searchInput" placeholder="Search contacts" class="bg-transparent text-white placeholder-gray-400 text-sm focus:outline-none w-full">
+          <div class="w-7 h-7 rounded-full bg-teal-600 text-white font-bold flex items-center justify-center text-xs ml-2 shrink-0">
+            A
+          </div>
+        </div>
+      </div>
+
+      <!-- Directory Content -->
+      <div id="directoryContent" class="flex-1 overflow-y-auto no-scrollbar px-3 py-2 space-y-4">
+        <div class="flex justify-between items-center px-3 pt-1 text-gray-300 text-xs font-medium">
+          <div class="flex items-center space-x-1 cursor-pointer">
+            <span>All contacts</span>
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+          </div>
+          <div class="flex space-x-3 text-gray-400">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14z"/></svg>
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M3 18h6v-2H3v2zM3 6v2h18V6H3zm0 7h12v-2H3v2z"/></svg>
+          </div>
+        </div>
+
+        <div class="bg-[#1f2125] rounded-2xl p-3 flex items-center space-x-3 border border-gray-800/40">
+          <div class="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center text-gray-300 font-medium text-sm shrink-0">
+            Me
+          </div>
+          <div class="flex-1">
+            <div class="text-[11px] text-gray-400">Your info</div>
+            <div class="text-sm font-medium text-white">My Profile</div>
+          </div>
+        </div>
+
+        <div id="contactsContainer" class="space-y-4 pb-16"></div>
+      </div>
+
+      <div class="absolute bottom-16 right-5">
+        <button class="w-12 h-12 bg-[#004f4f] hover:bg-[#006666] text-[#c2e7ff] rounded-2xl shadow-lg flex items-center justify-center transition-all">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+          </svg>
+        </button>
+      </div>
+
+      <div class="h-14 bg-[#1f2125] border-t border-gray-800 flex justify-around items-center px-4">
+        <button class="flex flex-col items-center text-[#c2e7ff] bg-[#004f4f]/50 px-4 py-1 rounded-full">
+          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+          <span class="text-[10px] font-medium mt-0.5">Contacts</span>
+        </button>
+        <button class="flex flex-col items-center text-gray-400 hover:text-gray-200">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
+          <span class="text-[10px] font-medium mt-0.5">Highlights</span>
+        </button>
+        <button class="flex flex-col items-center text-gray-400 hover:text-gray-200">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+          <span class="text-[10px] font-medium mt-0.5">Organize</span>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- ==================== SCREEN 2: ACTIVE CALL SCREEN ==================== -->
+    <div id="callScreen" class="screen absolute inset-0 flex flex-col z-20 opacity-0 pointer-events-none transform scale-95 transition-all duration-300 bg-black">
+      <img id="callerBgImage" src="" alt="Caller Background" class="absolute inset-0 w-full h-full object-cover object-center">
+      <div class="absolute inset-0 bg-gradient-to-b from-black/80 via-black/30 to-black/90"></div>
+
+      <div class="relative z-10 flex flex-col items-center pt-16 px-6 text-center">
+        <div id="callStatus" class="text-sm font-medium tracking-wide uppercase text-teal-400 mb-2">Calling...</div>
+        <h2 id="callerName" class="text-3xl font-bold text-white tracking-tight drop-shadow-md">Character Name</h2>
+        <p id="callTimer" class="text-xs text-gray-300 mt-2 font-mono bg-black/40 px-3 py-1 rounded-full">00:00</p>
+      </div>
+
+      <div class="flex-1"></div>
+
+      <div class="relative z-10 pb-12 px-8 flex flex-col items-center w-full">
+        <div class="grid grid-cols-3 gap-6 mb-10 w-full max-w-xs text-white">
+          <div class="flex flex-col items-center">
+            <button class="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/20 transition-all">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
+            </button>
+            <span class="text-[11px] mt-1.5 text-gray-300">Mute</span>
+          </div>
+          <div class="flex flex-col items-center">
+            <button class="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/20 transition-all">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+            </button>
+            <span class="text-[11px] mt-1.5 text-gray-300">Keypad</span>
+          </div>
+          <div class="flex flex-col items-center">
+            <button class="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/20 transition-all">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15.536a5 5 0 001.414 1.414m2.828-9.9a9 9 0 0112.728 0"/></svg>
+            </button>
+            <span class="text-[11px] mt-1.5 text-gray-300">Speaker</span>
+          </div>
+        </div>
+
+        <button id="endCallBtn" class="w-20 h-20 bg-red-600 hover:bg-red-700 text-white rounded-full flex items-center justify-center shadow-2xl transform active:scale-95 transition-all">
+          <svg class="w-10 h-10 transform rotate-[135deg]" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
+          </svg>
+        </button>
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+    // Clean Direct CDN URLs
+    const RAW_BASE = "https://raw.githubusercontent.com/xStix99x/Call-Friends/main/";
+
+    const contactsData = [
+      {
+        name: "Mickey Mouse",
+        contactPhoto: RAW_BASE + "Mickey%20Mouse_Small.jpg",
+        callPhoto: RAW_BASE + "Mickey%20Mouse_Big.jpg",
+        audio: RAW_BASE + "Mickey_Audio.mp3"
+      },
+      {
+        name: "Minnie Mouse",
+        contactPhoto: RAW_BASE + "Minnie%20Mouse_Small.jpg",
+        callPhoto: RAW_BASE + "Minnie%20Mouse_Big.jpg",
+        audio: RAW_BASE + "Minnie_Audio.mp3"
+      },
+      {
+        name: "Donald Duck",
+        contactPhoto: RAW_BASE + "Donald_Small.jpg",
+        callPhoto: RAW_BASE + "Donald_Big.jpg",
+        audio: RAW_BASE + "Donald_Audio.mp3"
+      },
+      {
+        name: "Daisy Duck",
+        contactPhoto: RAW_BASE + "Daisy_Small.jpg",
+        callPhoto: RAW_BASE + "Daisy_Big.jpg",
+        audio: RAW_BASE + "Daisy_Audio.mp3"
+      },
+      {
+        name: "Goofy",
+        contactPhoto: RAW_BASE + "Goofy_Small.jpg",
+        callPhoto: RAW_BASE + "Goofy_Big.jpg",
+        audio: RAW_BASE + "Goofy_Audio.mp3"
+      },
+      {
+        name: "Clarabelle",
+        contactPhoto: RAW_BASE + "Clarabelle_Small.jpg",
+        callPhoto: RAW_BASE + "Clarabelle_Big.jpg",
+        audio: RAW_BASE + "Clarabelle_Audio.mp3"
+      },
+      {
+        name: "Winnie the Pooh",
+        contactPhoto: RAW_BASE + "Winnie%20the%20Pooh_Small.jpg",
+        callPhoto: RAW_BASE + "Winnie%20the%20Pooh_Big.jpg",
+        audio: RAW_BASE + "Pooh_Audio.mp3"
+      },
+      {
+        name: "Tigger",
+        contactPhoto: RAW_BASE + "Tigger_Small.jpg",
+        callPhoto: RAW_BASE + "Tigger_Big.jpg",
+        audio: RAW_BASE + "Tigger_Audio.mp3"
+      },
+      {
+        name: "Stitch",
+        contactPhoto: RAW_BASE + "Stitch_Small.jpg",
+        callPhoto: RAW_BASE + "Stitch_Big.jpg",
+        audio: RAW_BASE + "Stitch_Audio.mp3"
+      },
+      {
+        name: "Peppa Pig",
+        contactPhoto: RAW_BASE + "Peppa%20Pig_Small.jpg",
+        callPhoto: RAW_BASE + "Peppa%20Pig_Big.jpg",
+        audio: RAW_BASE + "Peppa_Audio.mp3"
+      }
+    ];
+
+    const phoneRingUrl = RAW_BASE + "Phone%20Ring.mp3";
+    const endCallUrl = RAW_BASE + "End%20Call.mp3";
+
+    let currentAudio = null;
+    let timerInterval = null;
+    let secondsElapsed = 0;
+    let activePhase = 'idle';
+
+    const contactListScreen = document.getElementById('contactListScreen');
+    const callScreen = document.getElementById('callScreen');
+    const contactsContainer = document.getElementById('contactsContainer');
+    const searchInput = document.getElementById('searchInput');
+    const callerNameEl = document.getElementById('callerName');
+    const callerBgImageEl = document.getElementById('callerBgImage');
+    const callStatusEl = document.getElementById('callStatus');
+    const callTimerEl = document.getElementById('callTimer');
+    const endCallBtn = document.getElementById('endCallBtn');
+
+    function updateClock() {
+      const now = new Date();
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      document.getElementById('currentTime').textContent = `${hours}:${minutes}`;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    function renderContacts(filterText = "") {
+      contactsContainer.innerHTML = "";
+      const sorted = [...contactsData].sort((a, b) => a.name.localeCompare(b.name));
+      const filtered = sorted.filter(c => c.name.toLowerCase().includes(filterText.toLowerCase()));
+
+      if (filtered.length === 0) {
+        contactsContainer.innerHTML = `<div class="text-center py-8 text-gray-500 text-sm">No contacts found</div>`;
+        return;
+      }
+
+      const groups = {};
+      filtered.forEach(contact => {
+        const letter = contact.name.charAt(0).toUpperCase();
+        if (!groups[letter]) groups[letter] = [];
+        groups[letter].push(contact);
+      });
+
+      Object.keys(groups).sort().forEach(letter => {
+        const groupEl = document.createElement('div');
+        groupEl.className = "space-y-1";
+
+        const letterHeader = document.createElement('div');
+        letterHeader.className = "text-teal-400 text-xs font-semibold px-3 py-1";
+        letterHeader.textContent = letter;
+        groupEl.appendChild(letterHeader);
+
+        const cardContainer = document.createElement('div');
+        cardContainer.className = "bg-[#1f2125] rounded-2xl overflow-hidden divide-y divide-gray-800/60 border border-gray-800/40";
+
+        groups[letter].forEach(contact => {
+          const item = document.createElement('div');
+          item.className = "flex items-center space-x-3 p-3 hover:bg-[#282a2f] cursor-pointer transition-colors active:bg-gray-800";
+          item.onclick = () => initiateCall(contact);
+
+          item.innerHTML = `
+            <img src="${contact.contactPhoto}" alt="${contact.name}" class="w-10 h-10 rounded-full object-cover bg-gray-700 shrink-0">
+            <span class="text-sm font-medium text-white flex-1">${contact.name}</span>
+          `;
+          cardContainer.appendChild(item);
+        });
+
+        groupEl.appendChild(cardContainer);
+        contactsContainer.appendChild(groupEl);
+      });
+    }
+
+    searchInput.addEventListener('input', (e) => renderContacts(e.target.value));
+
+    function initiateCall(contact) {
+      callerNameEl.textContent = contact.name;
+      callerBgImageEl.src = contact.callPhoto;
+      callStatusEl.textContent = "Ringing...";
+      callTimerEl.textContent = "00:00";
+      secondsElapsed = 0;
+
+      contactListScreen.classList.replace('opacity-100', 'opacity-0');
+      contactListScreen.classList.replace('pointer-events-auto', 'pointer-events-none');
+      
+      callScreen.classList.replace('opacity-0', 'opacity-100');
+      callScreen.classList.replace('pointer-events-none', 'pointer-events-auto');
+      callScreen.classList.replace('scale-95', 'scale-100');
+
+      playAudioSequence(phoneRingUrl, 'ring', () => {
+        callStatusEl.textContent = "Connected";
+        startTimer();
+        playAudioSequence(contact.audio, 'character', () => handleCallEnd());
+      });
+    }
+
+    function playAudioSequence(src, phase, onEndedCallback) {
+      stopCurrentAudio();
+      activePhase = phase;
+      
+      currentAudio = new Audio(src);
+      currentAudio.play().catch(e => console.log("Audio playback error:", e));
+
+      currentAudio.onended = () => {
+        if (onEndedCallback) onEndedCallback();
+      };
+    }
+
+    function handleCallEnd() {
+      stopTimer();
+      callStatusEl.textContent = "Call Ended";
+      playAudioSequence(endCallUrl, 'end', () => returnToDirectory());
+    }
+
+    function returnToDirectory() {
+      stopCurrentAudio();
+      stopTimer();
+      activePhase = 'idle';
+
+      callScreen.classList.replace('opacity-100', 'opacity-0');
+      callScreen.classList.replace('pointer-events-auto', 'pointer-events-none');
+      callScreen.classList.replace('scale-100', 'scale-95');
+
+      contactListScreen.classList.replace('opacity-0', 'opacity-100');
+      contactListScreen.classList.replace('pointer-events-none', 'pointer-events-auto');
+    }
+
+    endCallBtn.addEventListener('click', () => {
+      if (activePhase === 'end') returnToDirectory();
+      else handleCallEnd();
+    });
+
+    function stopCurrentAudio() {
+      if (currentAudio) {
+        currentAudio.pause();
+        currentAudio.currentTime = 0;
+        currentAudio = null;
+      }
+    }
+
+    function startTimer() {
+      stopTimer();
+      secondsElapsed = 0;
+      timerInterval = setInterval(() => {
+        secondsElapsed++;
+        const mins = String(Math.floor(secondsElapsed / 60)).padStart(2, '0');
+        const secs = String(secondsElapsed % 60).padStart(2, '0');
+        callTimerEl.textContent = `${mins}:${secs}`;
+      }, 1000);
+    }
+
+    function stopTimer() {
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+      }
+    }
+
+    renderContacts();
+  </script>
+</body>
+</html>
