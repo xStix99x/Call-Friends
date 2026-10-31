@@ -1,6 +1,6 @@
 {
-  "name": "Contacts",
-  "short_name": "Contacts",
+  "name": "Call Friends",
+  "short_name": "CF",
   "start_url": "/Call-Friends/",
   "scope": "/Call-Friends/",
   "display": "standalone",
